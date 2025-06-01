@@ -1,0 +1,11 @@
+[project]
+name = "comparaison-barometre-fub"
+version = "0.1.0"
+description = "Comparaison des baromètres FUB"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+license = "MIT"
+authors = [
+    { name = "CyclisteBx", email = "sped-seldom-0z@icloud.com" },
+]
