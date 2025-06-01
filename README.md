@@ -1,7 +1,9 @@
 ### Script python pour comparer les baromètres de la FUB 2019/2021 et 2021/2025
 
 Installation des dépendances en utilisant `uv` (https://docs.astral.sh/uv/#installation)
+
 `git clone https://github.com/CyclisteBx/comparaison_barometre_FUB.git`
+
 `uv sync`
 
 Données volumineuses à télécharger et à placer dans le dossier data/
@@ -17,5 +19,5 @@ Scripts:
 Sorties:
 - dossier png/: une image par département + une image de la France Métropolitaine
 - dossier output/:
-  * commune_qualif.csv: fichier recapitulatif des evolutions absolues et relative par département
-  * tweets: fichier recapitulatif des tweets par département
+  * commune_qualif.csv: fichier recapitulatif des évolutions absolues et relative par département
+  * tweets.txt: fichier recapitulatif des tweets par département
