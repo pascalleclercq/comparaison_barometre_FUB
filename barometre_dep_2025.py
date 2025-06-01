@@ -99,12 +99,11 @@ gdf_communes[
     ax=ax[0],
     edgecolor='none',
 )
-if (gdf_communes["contributions_2021"] >= 50).any():
-    gdf_communes[(gdf_communes["contributions_2021"] >= 50)].plot(
-        color=(0.61, 0.87, 0.19),
-        ax=ax[0],
-        edgecolor='none',
-    )
+gdf_communes[(gdf_communes["contributions_2021"] >= 50)].plot(
+    color=(0.61, 0.87, 0.19),
+    ax=ax[0],
+    edgecolor='none',
+)
 
 
 
@@ -114,14 +113,13 @@ gdf_communes[gdf_communes["contributions_2025"] == 0].plot(
     edgecolor='none',
 )
 gdf_communes[
-    (gdf_communes["contributions_2025"] > 0) & (gdf_communes["contributions_2025"] < 50)
+(( gdf_communes["contributions_2025"] < 50) & (gdf_communes["population"] > 5000)) | ((gdf_communes["contributions_2025"] < 30) & (gdf_communes["population"] <= 5000))
 ].plot(
     color=(0.77, 0.18, 0.20),
     ax=ax[1],
     edgecolor='none',
 )
-if (gdf_communes["contributions_2025"] >= 50).any():
-    gdf_communes[(gdf_communes["contributions_2025"] >= 50)].plot(
+gdf_communes[(( gdf_communes["contributions_2025"] >= 50) & (gdf_communes["population"] > 5000)) | ((gdf_communes["contributions_2025"] >= 30) & (gdf_communes["population"] <= 5000))].plot(
         color=(0.61, 0.87, 0.19),
         ax=ax[1],
         edgecolor='none',
@@ -149,11 +147,11 @@ ax[1].set_aspect(1.3)
 pl.savefig("png/{}.png".format("France_metropolitaine"), dpi=300)
 
 dep_ids.remove('75')
-dep_ids.remove('92')
-dep_ids.remove('93')
-dep_ids.remove('94')
-dep_ids.remove('95')
-dep_ids.remove('974')
+# dep_ids.remove('92')
+# dep_ids.remove('93')
+# dep_ids.remove('94')
+# dep_ids.remove('95')
+# dep_ids.remove('974')
 
 with open("outputs/tweets.txt", "w") as f:
     for idep in tqdm(dep_ids):
@@ -177,19 +175,20 @@ with open("outputs/tweets.txt", "w") as f:
         )
         fig.patch.set_facecolor((0.50, 0.51, 0.55))
 
-
-        gdf_dep[gdf_dep["contributions_2021"] == 0].plot(
-            color=(0.58, 0.59, 0.63),
-            ax=ax[0],
-            edgecolor=(0.65, 0.67, 0.69),
-        )
-        gdf_dep[
-            (gdf_dep["contributions_2021"] > 0) & (gdf_dep["contributions_2021"] < 50)
-        ].plot(
-            color=(0.77, 0.18, 0.20),
-            ax=ax[0],
-            edgecolor=(0.65, 0.67, 0.69),
-        )
+        with contextlib.suppress(ValueError):
+            gdf_dep[gdf_dep["contributions_2021"] == 0].plot(
+                color=(0.58, 0.59, 0.63),
+                ax=ax[0],
+                edgecolor=(0.65, 0.67, 0.69),
+            )
+        with contextlib.suppress(ValueError):
+            gdf_dep[
+                (gdf_dep["contributions_2021"] > 0) & (gdf_dep["contributions_2021"] < 50)
+            ].plot(
+                color=(0.77, 0.18, 0.20),
+                ax=ax[0],
+                edgecolor=(0.65, 0.67, 0.69),
+            )
         with contextlib.suppress(ValueError):
             gdf_dep[(gdf_dep["contributions_2021"] >= 50)].plot(
                 color=(0.61, 0.87, 0.19),
@@ -204,14 +203,14 @@ with open("outputs/tweets.txt", "w") as f:
                 ax=ax[1],
                 edgecolor=(0.65, 0.67, 0.69),
             )
-
-        gdf_dep[
-            (( gdf_dep["contributions_2025"] < 50) & (gdf_dep["population"] > 5000)) | ((gdf_dep["contributions_2025"] < 30) & (gdf_dep["population"] <= 5000))
-        ].plot(
-            color=(0.77, 0.18, 0.20),
-            ax=ax[1],
-            edgecolor=(0.65, 0.67, 0.69),
-        )
+        with contextlib.suppress(ValueError):
+            gdf_dep[
+                (( gdf_dep["contributions_2025"] < 50) & (gdf_dep["population"] > 5000)) | ((gdf_dep["contributions_2025"] < 30) & (gdf_dep["population"] <= 5000))
+            ].plot(
+                color=(0.77, 0.18, 0.20),
+                ax=ax[1],
+                edgecolor=(0.65, 0.67, 0.69),
+            )
         with contextlib.suppress(ValueError):
             gdf_dep[(( gdf_dep["contributions_2025"] >= 50) & (gdf_dep["population"] > 5000)) | ((gdf_dep["contributions_2025"] >= 30) & (gdf_dep["population"] <= 5000))].plot(
                 color=(0.61, 0.87, 0.19),
