@@ -1,0 +1,457 @@
+from io import StringIO
+
+import geopandas as gpd
+import matplotlib as mpl
+import matplotlib.pyplot as pl
+import pandas as pd
+import requests  # library to handle requests
+from bs4 import BeautifulSoup  # library to parse HTML documents
+from matplotlib.offsetbox import (
+    AnchoredOffsetbox,
+    DrawingArea,
+    HPacker,
+    TextArea,
+    VPacker,
+)
+from matplotlib.patches import Rectangle
+from tqdm import tqdm
+
+mpl.rcParams["text.color"] = "white"
+
+pl.ion()
+
+wikiurl = "https://fr.wikipedia.org/wiki/Nombre_de_communes_par_département_en_France_au_1er_janvier_2014"
+table_class = "wikitable sortable jquery-tablesorter"
+response = requests.get(wikiurl)
+soup = BeautifulSoup(response.text, "html.parser")
+dep_table = soup.find("table", {"class": "wikitable"})
+df_dep = pd.read_html(StringIO(str(dep_table)))
+# convert list to dataframe
+df_dep = pd.DataFrame(df_dep[0])
+df_dep = df_dep.drop(
+    [ "Rang", "Population municipale en 2011[2],[3]", "Moyenne d'habitants par commune"], axis=1
+)
+# Nettoyage trailing [4] pour Mayotte
+df_dep.loc[df_dep["N° du dép."] == "976", "Nom du département"] = "Mayotte"
+
+gdf_communes_shp = gpd.read_file("data/communes-20210101-shp")
+gdf_2021 = gpd.read_file("data/barometre2021.json")
+gdf_2021 = gdf_2021.drop("geometry", axis=1)
+
+gdf_2019 = pd.read_csv("data/Carte_participation_data_utf8.csv", sep="\t")
+
+
+gdf_communes = gdf_communes_shp.join(
+    gdf_2021.set_index("insee"), on="insee", how="outer"
+)
+gdf_communes = gdf_communes.join(gdf_2019.set_index("Depcom"), on="insee", how="outer")
+gdf_communes.rename(
+    columns={
+        "contributions": "contributions_2021",
+        "nb rep 2019 cyclistes": "contributions_2019",
+    },
+    inplace=True,
+)
+
+gdf_communes["contributions_2021"] = gdf_communes["contributions_2021"].fillna(0)
+gdf_communes["contributions_2019"] = gdf_communes["contributions_2019"].fillna(0)
+
+dep_ids = [str(idep).zfill(2) for idep in range(1, 20)]
+dep_ids.append("2A")
+dep_ids.append("2B")
+for idep in range(21, 96):
+    dep_ids.append(str(idep).zfill(2))
+dep_ids.append("971")
+dep_ids.append("972")
+dep_ids.append("973")
+dep_ids.append("974")
+dep_ids.append("976")
+
+
+qualifs_2019 = []
+qualifs_2021 = []
+
+qualifs = pd.DataFrame(
+    columns=["qualifs_2019", "qualifs_2021", "diff"],
+    index=dep_ids,
+)
+
+lon_min, lat_min, lon_max, lat_max = [-5, 40.7, 10, 51.5]
+ratio_dep = (lat_max - lat_min) / (lon_max - lon_min)
+
+
+fig, ax = pl.subplots(
+    1, 2, constrained_layout=True, figsize=(10, 10 * ratio_dep + 2)
+)
+fig.patch.set_facecolor((0.50, 0.51, 0.55))
+
+
+
+
+gdf_communes[gdf_communes["contributions_2019"] == 0].plot(
+    color=(0.58, 0.59, 0.63),
+    ax=ax[0],
+    edgecolor='none',
+)
+gdf_communes[
+    (gdf_communes["contributions_2019"] > 0) & (gdf_communes["contributions_2019"] < 50)
+].plot(
+    color=(0.77, 0.18, 0.20),
+    ax=ax[0],
+    edgecolor='none',
+)
+if (gdf_communes["contributions_2019"] >= 50).any():
+    gdf_communes[(gdf_communes["contributions_2019"] >= 50)].plot(
+        color=(0.61, 0.87, 0.19),
+        ax=ax[0],
+        edgecolor='none',
+    )
+
+gdf_communes[gdf_communes["contributions_2021"] == 0].plot(
+    color=(0.58, 0.59, 0.63),
+    ax=ax[1],
+    edgecolor='none',
+)
+gdf_communes[
+    (gdf_communes["contributions_2021"] > 0) & (gdf_communes["contributions_2021"] < 50)
+].plot(
+    color=(0.77, 0.18, 0.20),
+    ax=ax[1],
+    edgecolor='none',
+)
+if (gdf_communes["contributions_2021"] >= 50).any():
+    gdf_communes[(gdf_communes["contributions_2021"] >= 50)].plot(
+        color=(0.61, 0.87, 0.19),
+        ax=ax[1],
+        edgecolor='none',
+    )
+
+
+ax[0].set_xlim([lon_min,lon_max])
+ax[0].set_ylim([lat_min,lat_max])
+ax[1].set_xlim([lon_min,lon_max])
+ax[1].set_ylim([lat_min,lat_max])
+
+ax[0].set_title(
+    " Participation au Barometre Vélo \n\n  2019"
+        # "Ile de France"
+    ,
+    loc="left",
+    fontdict={"fontsize": "24"},
+)
+ax[1].set_title("\n\n  2021", loc="left", fontdict={"fontsize": "24"})
+
+ax[0].set_axis_off()
+ax[1].set_axis_off()
+ax[0].set_aspect(1.3)
+ax[1].set_aspect(1.3)
+pl.savefig("png/{}.png".format("France_metropolitaine"), dpi=300)
+
+dep_ids.remove('75')
+dep_ids.remove('92')
+dep_ids.remove('93')
+dep_ids.remove('94')
+dep_ids.remove('95')
+dep_ids.remove('974')
+
+with open("outputs/tweets.txt", "w") as f:
+    for idep in tqdm(dep_ids):
+        dep_id = idep
+
+        # Eventuellement pour l'Ile de France
+        # for i, dep_id in enumerate(['75', '77', '78', '91', '92', '93', '94', '95']):
+        #     is_dep = gdf_communes["insee"].str.startswith(str(dep_id))
+        #     if i == 0:
+        #         gdf_dep = gdf_communes[is_dep]
+        #     else:
+        #         gdf_dep = pd.concat([gdf_dep, gdf_communes[is_dep]])
+
+        is_dep = gdf_communes["insee"].str.startswith(str(dep_id))
+        gdf_dep = gdf_communes[is_dep]
+
+        lon_min, lat_min, lon_max, lat_max = gdf_dep.total_bounds
+        ratio_dep = (lat_max - lat_min) / (lon_max - lon_min)
+        fig, ax = pl.subplots(
+            1, 2, constrained_layout=True, figsize=(10, 10 * ratio_dep + 2)
+        )
+        fig.patch.set_facecolor((0.50, 0.51, 0.55))
+
+        gdf_dep[gdf_dep["contributions_2019"] == 0].plot(
+            color=(0.58, 0.59, 0.63),
+            ax=ax[0],
+            edgecolor=(0.65, 0.67, 0.69),
+        )
+        gdf_dep[
+            (gdf_dep["contributions_2019"] > 0) & (gdf_dep["contributions_2019"] < 50)
+        ].plot(
+            color=(0.77, 0.18, 0.20),
+            ax=ax[0],
+            edgecolor=(0.65, 0.67, 0.69),
+        )
+        if (gdf_dep["contributions_2019"] >= 50).any():
+            gdf_dep[(gdf_dep["contributions_2019"] >= 50)].plot(
+                color=(0.61, 0.87, 0.19),
+                ax=ax[0],
+                edgecolor=(0.65, 0.67, 0.69),
+            )
+
+        gdf_dep[gdf_dep["contributions_2021"] == 0].plot(
+            color=(0.58, 0.59, 0.63),
+            ax=ax[1],
+            edgecolor=(0.65, 0.67, 0.69),
+        )
+        gdf_dep[
+            (gdf_dep["contributions_2021"] > 0) & (gdf_dep["contributions_2021"] < 50)
+        ].plot(
+            color=(0.77, 0.18, 0.20),
+            ax=ax[1],
+            edgecolor=(0.65, 0.67, 0.69),
+        )
+        if (gdf_dep["contributions_2021"] >= 50).any():
+            gdf_dep[(gdf_dep["contributions_2021"] >= 50)].plot(
+                color=(0.61, 0.87, 0.19),
+                ax=ax[1],
+                edgecolor=(0.65, 0.67, 0.69),
+            )
+
+        qualif_2019 = len(gdf_dep[(gdf_dep["contributions_2019"] >= 50)])
+        qualif_2021 = len(gdf_dep[(gdf_dep["contributions_2021"] >= 50)])
+        sup_zero_2019 = len(gdf_dep[(gdf_dep["contributions_2019"] > 0)])
+        sup_zero_2021 = len(gdf_dep[(gdf_dep["contributions_2021"] > 0)])
+
+        qualifs_2019.append(qualif_2019)
+        qualifs_2021.append(qualif_2021)
+
+        qualifs.loc[dep_id, 'qualifs_2019'] = qualif_2019
+        qualifs.loc[dep_id, 'qualifs_2021'] = qualif_2021
+        qualifs.loc[dep_id, 'diff'] = qualif_2021 - qualif_2019
+        ax[0].set_title(
+            " Participation au Barometre Vélo : {:}\n\n  2019".format(
+                df_dep[df_dep["N° du dép."] == dep_id][
+                    "Nom du département"
+                ].values[0]
+                # "Ile de France"
+            ),
+            loc="left",
+            fontdict={"fontsize": "24"},
+        )
+        ax[1].set_title("\n\n  2021", loc="left", fontdict={"fontsize": "24"})
+
+        ax[0].set_axis_off()
+        ax[1].set_axis_off()
+
+        box_text_communes = TextArea(
+            f"Communes : {len(gdf_dep)} ", textprops=dict(color="w", size=16)
+        )
+        box_text_red = TextArea(
+            f" au moins une réponse : {sup_zero_2019} ",
+            textprops=dict(color="w", size=16),
+        )
+        box_draw_red = DrawingArea(20, 20, 0, 0)
+        rect = Rectangle((2, 2), width=16, height=16, angle=0, fc=(0.77, 0.18, 0.20))
+        box_draw_red.add_artist(rect)
+        box_red = HPacker(
+            children=[box_draw_red, box_text_red],
+            align="center",
+            pad=0,
+            sep=0,
+            mode="fixed",
+        )
+
+        box_text_green = TextArea(
+            f" qualifiées : {qualif_2019} ", textprops=dict(color="w", size=16)
+        )
+        box_draw_green = DrawingArea(20, 20, 0, 0)
+        rect = Rectangle((2, 2), width=16, height=16, angle=0, fc=(0.61, 0.87, 0.19))
+        box_draw_green.add_artist(rect)
+        box_green = HPacker(
+            children=[box_draw_green, box_text_green],
+            align="center",
+            pad=0,
+            sep=0,
+            mode="fixed",
+        )
+
+        box = VPacker(
+            children=[box_text_communes, box_green, box_red],
+            align="left",
+            pad=0,
+            sep=4,
+            mode="fixed",
+        )
+        anchored_box = AnchoredOffsetbox(
+            loc="upper center",
+            child=box,
+            pad=0.0,
+            frameon=False,
+            bbox_to_anchor=(0.4, 0),
+            bbox_transform=ax[0].transAxes,
+            borderpad=0.0,
+        )
+        ax[0].add_artist(anchored_box)
+
+        box_text_communes = TextArea(
+            f"Communes : {len(gdf_dep)} ", textprops=dict(color="w", size=16)
+        )
+        box_text_red = TextArea(
+            f" au moins une réponse : {sup_zero_2021} ",
+            textprops=dict(color="w", size=16),
+        )
+        box_draw_red = DrawingArea(20, 20, 0, 0)
+        rect = Rectangle((2, 2), width=16, height=16, angle=0, fc=(0.77, 0.18, 0.20))
+        box_draw_red.add_artist(rect)
+        box_red = HPacker(
+            children=[box_draw_red, box_text_red],
+            align="center",
+            pad=0,
+            sep=0,
+            mode="fixed",
+        )
+
+        box_text_green = TextArea(
+            f" qualifiées : {qualif_2021} ", textprops=dict(color="w", size=16)
+        )
+        box_draw_green = DrawingArea(20, 20, 0, 0)
+        rect = Rectangle((2, 2), width=16, height=16, angle=0, fc=(0.61, 0.87, 0.19))
+        box_draw_green.add_artist(rect)
+        box_green = HPacker(
+            children=[box_draw_green, box_text_green],
+            align="center",
+            pad=0,
+            sep=0,
+            mode="fixed",
+        )
+
+        box = VPacker(
+            children=[box_text_communes, box_green, box_red],
+            align="left",
+            pad=0,
+            sep=4,
+            mode="fixed",
+        )
+        anchored_box = AnchoredOffsetbox(
+            loc="upper center",
+            child=box,
+            pad=0.0,
+            frameon=False,
+            bbox_to_anchor=(0.4, 0),
+            bbox_transform=ax[1].transAxes,
+            borderpad=0.0,
+        )
+        ax[1].add_artist(anchored_box)
+
+        # box_text_title = TextArea("Participation au Barometre Vélo: {:}".format(
+        #         df_dep[df_dep["N° du dép."] == dep_id]["Nom du département"].values[0], textprops=dict(color="w", size=30)
+        # ))
+        #
+        # anchored_box_title = AnchoredOffsetbox(
+        #     loc="upper left",
+        #     child=box_text_title,
+        #     pad=0.0,
+        #     frameon=False,
+        #     bbox_to_anchor=(0, 1.2),
+        #     bbox_transform=ax[0].transAxes,
+        #     borderpad=0,
+        # )
+        #
+        # ax[0].add_artist(anchored_box_title)
+
+        # pl.suptitle(
+        #     "Participation au Barometre Vélo: {:}".format(
+        #         df_dep[df_dep["N° du dép."] == dep_id]["Nom du département"].values[0]
+        #     ),
+        #     x=0.1,
+        #     y=0.98,
+        #     fontsize=22,
+        #     horizontalalignment="left",
+        # )
+        # pl.tight_layout()                                                                                                                      fontdict={'fontsize':'25'}
+        pl.savefig(f"png/{dep_id}.png", dpi=300)
+        f.write(
+            "Évolution de la participation 2019-2021 au Baromètre Vélo organisé par @FUB_fr\n\n"
+        )
+        if (qualif_2021 - qualif_2019) < -1:
+            f.write(
+                "{:}: {} communes qualifiées en moins".format(
+                    df_dep[df_dep["N° du dép."] == dep_id][
+                        "Nom du département"
+                    ].values[0],
+                    -(qualif_2021 - qualif_2019),
+                )
+            )
+
+        elif (qualif_2021 - qualif_2019) == -1:
+            f.write(
+                "{:}: {} commune qualifiée en moins".format(
+                    df_dep[df_dep["N° du dép."] == dep_id][
+                        "Nom du département"
+                    ].values[0],
+                    -(qualif_2021 - qualif_2019),
+                )
+            )
+
+        elif (qualif_2021 - qualif_2019) == 0:
+            f.write(
+                "{:}: pas de commune qualifiée en plus".format(
+                    df_dep[df_dep["N° du dép."] == dep_id][
+                        "Nom du département"
+                    ].values[0]
+                )
+            )
+
+        elif (qualif_2021 - qualif_2019) == 1:
+            f.write(
+                "{:}: {} commune qualifiée en plus".format(
+                    df_dep[df_dep["N° du dép."] == dep_id][
+                        "Nom du département"
+                    ].values[0],
+                    (qualif_2021 - qualif_2019),
+                )
+            )
+        else:
+            f.write(
+                "{:}: {} communes qualifiées en plus".format(
+                    df_dep[df_dep["N° du dép."] == dep_id][
+                        "Nom du département"
+                    ].values[0],
+                    (qualif_2021 - qualif_2019),
+                )
+            )
+
+        if (qualif_2021 - qualif_2019)<0:
+            emoji = "☹️"
+        if (qualif_2021 - qualif_2019)==0:
+            emoji = "😕"
+        if ((qualif_2021 - qualif_2019)>0) and ((qualif_2021 - qualif_2019)<=6):
+            emoji = "🙌"
+        if ((qualif_2021 - qualif_2019)>6) and ((qualif_2021 - qualif_2019)<=11):
+            emoji = "🥳😊"
+        if ((qualif_2021 - qualif_2019)>11) and ((qualif_2021 - qualif_2019)<=21):
+            emoji = "👍🎊"
+        if ((qualif_2021 - qualif_2019)>21) and ((qualif_2021 - qualif_2019)<=51):
+            emoji = "🎉🤩"
+        if ((qualif_2021 - qualif_2019)>51):
+            emoji = "👈👏🤯"
+
+        medaille = ''
+        # if (qualif_2021 - qualif_2019) == qualifs.iloc[0]['diff']:
+        #     medaille = 'Meilleure progression 🥇'
+        # elif (qualif_2021 - qualif_2019) == qualifs.iloc[1]['diff']:
+        #     medaille = '2ème meilleure progression 🥈'
+        # elif (qualif_2021 - qualif_2019) == qualifs.iloc[2]['diff']:
+        #     medaille = '3ème meilleure progression 🥉'
+        # elif (qualif_2021 - qualif_2019) == qualifs.iloc[3]['diff']:
+        #     medaille = '4ème meilleure progression 🍫'
+
+        f.write(f" {emoji}")
+        if medaille:
+            f.write(f"\n\n{medaille}")
+
+        f.write("\n\n\n")
+
+        pl.close()
+
+
+qualifs["diff"] = qualifs["qualifs_2021"] - qualifs["qualifs_2019"]
+# qualifs["relatif"] = qualifs["qualifs_2021"] / qualifs["qualifs_2019"]
+qualifs.to_csv('outputs/commune_qualif.csv')
