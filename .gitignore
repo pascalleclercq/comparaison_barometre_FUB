@@ -195,3 +195,10 @@ cython_debug/
 
 # MacOS
 .DS_Store
+.envrc
+
+# png outputs
+png/
+
+# Large data
+data/communes-20210101-shp
