@@ -2,7 +2,7 @@
 
 Installation des dépendances en utilisant `uv` (https://docs.astral.sh/uv/#installation)
 
-```git clone https://github.com/CyclisteBx/comparaison_barometre_FUB.git`
+```git clone https://github.com/CyclisteBx/comparaison_barometre_FUB.git
 uv sync```
 
 Données volumineuses à télécharger et à placer dans le dossier data/
