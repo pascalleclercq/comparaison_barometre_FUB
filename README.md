@@ -9,7 +9,10 @@ uv sync
 
 Données volumineuses à télécharger et à placer dans le dossier data/
 - Contours des communes issues de OpenStreetMap (https://www.data.gouv.fr/fr/datasets/decoupage-administratif-communal-francais-issu-d-openstreetmap/): https://www.data.gouv.fr/fr/datasets/decoupage-administratif-communal-francais-issu-d-openstreetmap/#/resources/17062524-991f-4e13-9bf0-b410cc2216fd
-- mettre à jour les données de 2025: `curl 'https://www.barometre-velo.fr/stats/progress.geojson' > data/barometre2025.json`
+- mettre à jour les données de 2025:
+```
+curl 'https://www.barometre-velo.fr/stats/progress.geojson' > data/barometre2025.json
+```
 
 
 
