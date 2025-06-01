@@ -2,9 +2,8 @@
 
 Installation des dépendances en utilisant `uv` (https://docs.astral.sh/uv/#installation)
 
-`git clone https://github.com/CyclisteBx/comparaison_barometre_FUB.git`
-
-`uv sync`
+```git clone https://github.com/CyclisteBx/comparaison_barometre_FUB.git`
+uv sync```
 
 Données volumineuses à télécharger et à placer dans le dossier data/
 - Contours des communes issues de OpenStreetMap (https://www.data.gouv.fr/fr/datasets/decoupage-administratif-communal-francais-issu-d-openstreetmap/): https://www.data.gouv.fr/fr/datasets/decoupage-administratif-communal-francais-issu-d-openstreetmap/#/resources/17062524-991f-4e13-9bf0-b410cc2216fd
