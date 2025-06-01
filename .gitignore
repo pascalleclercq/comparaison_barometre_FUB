@@ -198,8 +198,8 @@ cython_debug/
 .envrc
 
 # png outputs
-png/
-outputs/
+#png/
+#outputs/
 
 # Large data
 data/communes-20210101-shp
