@@ -98,14 +98,17 @@ ratio_dep = (lat_max - lat_min) / (lon_max - lon_min)
 #fig = pl.figure(figsize=(10, ))
 print(ratio_dep)
 
-fig = pl.figure(figsize=(10, 10 * ratio_dep + 4))
+#fig = pl.figure(figsize=(10, 10 * ratio_dep + 4))
+fig = pl.figure(figsize=(11, 10 * ratio_dep + 4))
+fig.set_layout_engine(layout='tight')
 ax1 = pl.subplot2grid((3, 2), (0, 0), colspan=2)
-ax2 = pl.subplot2grid((3, 2), (1, 0), rowspan=6)
-ax3 = pl.subplot2grid((3, 2), (1, 1), rowspan=6)
+ax2 = pl.subplot2grid((3, 2), (1, 0), rowspan=25)
+ax3 = pl.subplot2grid((3, 2), (1, 1), rowspan=25)
 
-im = pl.imread('data/adav.png')
+im = pl.imread('data/308482403_384298630581290_89844181439031233_n.jpg')
 ax1.imshow(im)
-
+#ax1.tick_params(labeltop=False, labelbottom=False, labelleft=False)
+ax1.set_anchor('N')
 
 fig.patch.set_facecolor(BACKGROUNG)
 
@@ -176,7 +179,7 @@ qualifs.loc[dep_id, 'diff'] = qualif_2025 - qualif_2021
 
 #ax2.imshow(image, vmin=0, vmax=255)
 ax2.set_title(
-    f"Barometre Vélo: {epci.name}\n\n     2021"
+    f"   Participation au Barometre Vélo: {epci.name}\n\n     2021"
 #    .format(
 #        df_dep[df_dep["N° du dép."] == dep_id][
 #            "Nom du département"
