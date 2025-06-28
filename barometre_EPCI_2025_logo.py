@@ -99,16 +99,17 @@ ratio_dep = (lat_max - lat_min) / (lon_max - lon_min)
 print(ratio_dep)
 
 #fig = pl.figure(figsize=(10, 10 * ratio_dep + 4))
-fig = pl.figure(figsize=(11, 10 * ratio_dep + 4))
+fig = pl.figure(figsize=(11, 11 * ratio_dep ))
 fig.set_layout_engine(layout='tight')
-ax1 = pl.subplot2grid((3, 2), (0, 0), colspan=2)
-ax2 = pl.subplot2grid((3, 2), (1, 0), rowspan=25)
-ax3 = pl.subplot2grid((3, 2), (1, 1), rowspan=25)
+ax1 = pl.subplot2grid((2, 40), (1, 16), colspan=4)
+ax2 = pl.subplot2grid((2, 40), (0, 0), rowspan=2, colspan=16)
+ax3 = pl.subplot2grid((2, 40), (0, 24), rowspan=2, colspan=16)
 
+#chargement du logo
 im = pl.imread('data/308482403_384298630581290_89844181439031233_n.jpg')
 ax1.imshow(im)
-#ax1.tick_params(labeltop=False, labelbottom=False, labelleft=False)
-ax1.set_anchor('N')
+ax1.tick_params(labeltop=False, labelbottom=False, labelleft=False)
+#ax1.set_anchor('N')
 
 fig.patch.set_facecolor(BACKGROUNG)
 
@@ -179,7 +180,7 @@ qualifs.loc[dep_id, 'diff'] = qualif_2025 - qualif_2021
 
 #ax2.imshow(image, vmin=0, vmax=255)
 ax2.set_title(
-    f"   Participation au Barometre Vélo: {epci.name}\n\n     2021"
+        f"   Participation au Barometre Vélo:\n   {epci.name}\n\n     2021"
 #    .format(
 #        df_dep[df_dep["N° du dép."] == dep_id][
 #            "Nom du département"
@@ -190,7 +191,7 @@ ax2.set_title(
     loc="left",
     fontdict={"fontsize": "22", "color": TITLE},
 )
-ax3.set_title("\n\n    2025", loc="left", fontdict={"fontsize": "22", "color": TITLE})
+ax3.set_title("\n\n\n    2025", loc="left", fontdict={"fontsize": "22", "color": TITLE})
 #ax1.set_axis_off()
 
 #imagebox = OffsetImage(im, zoom = 0.10)
