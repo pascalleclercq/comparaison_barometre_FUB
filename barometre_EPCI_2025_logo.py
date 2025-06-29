@@ -101,15 +101,17 @@ print(ratio_dep)
 #fig = pl.figure(figsize=(10, 10 * ratio_dep + 4))
 fig = pl.figure(figsize=(11, 11 * ratio_dep ))
 fig.set_layout_engine(layout='tight')
-ax1 = pl.subplot2grid((2, 40), (1, 16), colspan=4)
-ax2 = pl.subplot2grid((2, 40), (0, 0), rowspan=2, colspan=16)
-ax3 = pl.subplot2grid((2, 40), (0, 24), rowspan=2, colspan=16)
+ax1 = pl.subplot2grid((25, 40), (18, 16), rowspan=6, colspan=4)
+ax2 = pl.subplot2grid((25, 40), (1, 0),  rowspan=24, colspan=16)
+ax3 = pl.subplot2grid((25, 40), (1, 24), rowspan=24, colspan=16)
+ax4 = pl.subplot2grid((25, 40), (0, 0),  colspan=40)
 
 #chargement du logo
 im = pl.imread('data/308482403_384298630581290_89844181439031233_n.jpg')
 ax1.imshow(im)
 ax1.tick_params(labeltop=False, labelbottom=False, labelleft=False)
-#ax1.set_anchor('N')
+ax1.set_anchor('S')
+
 
 fig.patch.set_facecolor(BACKGROUNG)
 
@@ -179,8 +181,14 @@ qualifs.loc[dep_id, 'diff'] = qualif_2025 - qualif_2021
 #image = Image.open('data/logo_adav.jpg')
 
 #ax2.imshow(image, vmin=0, vmax=255)
+ax4.set_title(
+        f"Participation au Barometre Vélo:\n{epci.name}"
+        ,
+        loc="center",
+        fontdict={"fontsize": "22", "color": TITLE},
+)
 ax2.set_title(
-        f"   Participation au Barometre Vélo:\n   {epci.name}\n\n     2021"
+        f"2021"
 #    .format(
 #        df_dep[df_dep["N° du dép."] == dep_id][
 #            "Nom du département"
@@ -188,10 +196,10 @@ ax2.set_title(
 #        # "Ile de France"
 #    )
     ,
-    loc="left",
+    loc="center",
     fontdict={"fontsize": "22", "color": TITLE},
 )
-ax3.set_title("\n\n\n    2025", loc="left", fontdict={"fontsize": "22", "color": TITLE})
+ax3.set_title("2025", loc="center", fontdict={"fontsize": "22", "color": TITLE})
 #ax1.set_axis_off()
 
 #imagebox = OffsetImage(im, zoom = 0.10)
@@ -201,6 +209,7 @@ ax3.set_title("\n\n\n    2025", loc="left", fontdict={"fontsize": "22", "color":
 ax1.set_axis_off()
 ax2.set_axis_off()
 ax3.set_axis_off()
+ax4.set_axis_off()
 
 box_text_reponses = TextArea(
     f"Communes : {epci.nbr_communes} ", textprops=dict(color=SUB_TITLE, size=16)
