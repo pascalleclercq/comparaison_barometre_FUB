@@ -3,7 +3,7 @@ from io import StringIO
 from PIL import Image
 import os
 import sys
-import EPCI
+import EPCI as all_epci
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.pyplot as pl
@@ -27,7 +27,7 @@ mpl.rcParams["text.color"] = "black"   # default lebel color
 
 pl.ion() # Enable interactive mode
 
-epci = EPCI.all[sys.argv[1]] #Find EPCI by id
+epci = all_epci.all[sys.argv[1]] #Find EPCI by id
     
 gdf_communes_shp = gpd.read_file("data/communes-20220101-shp")
 gdf_2025 = gpd.read_file("data/barometre2025.json")
@@ -157,17 +157,14 @@ qualifs.loc[dep_id, 'qualifs_2025'] = qualif_2025
 #qualifs.loc[dep_id, 'diff'] = qualif_2025 - qualif_2021
 
 
-#qualifiees = gdf_dep[(( gdf_dep["contributions_2025"] >= 50) & (gdf_dep["population"] > 5000)) | ((gdf_dep["contributions_2025"] >= 30) & (gdf_dep["population"] <= 5000))]
+at_least_one = gdf_dep[(gdf_dep["contributions_2025"] > 0)]
 
-qualifiees = gdf_dep[(gdf_dep["contributions_2025"] > 0)]
-
-
-for idx, row in qualifiees.iterrows():
+for idx, row in at_least_one.iterrows():
 #    print(row)
 #    print(row['nom'], row['contributions_2025'], row['population'])
-    if row['coords'] is not None:
-     #   numvar = row['per_cent']
-        texte = row['nom']+"\n" + str(int(row['contributions_2025'])) 
+#    if row['coords'] is not None:
+        numvar = row['per_cent']
+        texte = row['nom']+"\n"+  f'{numvar:.3f} %'
         ax.annotate(text=texte,xy=(row['coords'].x,row['coords'].y),horizontalalignment='center',
             verticalalignment='center', fontsize=6, color="mediumblue")
 #bbox=dict(facecolor='white', edgecolor='none', alpha=0.8)
@@ -193,61 +190,6 @@ ax.set_axis_off()
 box_text_reponses = TextArea(
     f"Communes : {epci.nbr_communes} ", textprops=dict(color=SUB_TITLE, size=16)
 )
-# box_text_red = TextArea(
-#     f"   au moins une réponse : {sup_zero_2021} ",
-#     textprops=dict(color=SUB_TITLE, size=16),
-# )
-# box_draw_red = DrawingArea(20, 20, 0, 0)
-# rect = Rectangle((2, 2), width=16, height=16, angle=0, fc=(AT_LEAST_ONE))
-# box_draw_red.add_artist(rect)
-# box_red = HPacker(
-#     children=[box_draw_red, box_text_red],
-#     align="center",
-#     pad=0,
-#     sep=0,
-#     mode="fixed",
-# )
-#
-# box_text_green = TextArea(
-#     f"   qualifiées : {qualif_2021} ", textprops=dict(color=SUB_TITLE, size=16)
-# )
-# box_draw_green = DrawingArea(20, 20, 0, 0)
-# rect = Rectangle((2, 2), width=16, height=16, angle=0, fc=(QUALIFIED))
-# box_draw_green.add_artist(rect)
-# box_green = HPacker(
-#     children=[box_draw_green, box_text_green],
-#     align="center",
-#     pad=0,
-#     sep=0,
-#     mode="fixed",
-# )
-#
-# box = VPacker(
-#     children=[box_text_reponses, box_green, box_red],
-#     align="left",
-#     pad=0,
-#     sep=4,
-#     mode="fixed",
-# )
-# anchored_box = AnchoredOffsetbox(
-#     loc="upper center",
-#     child=box,
-#     pad=0.0,
-#     frameon=False,
-#     bbox_to_anchor=(0.4, 0),
-#     bbox_transform=ax[0].transAxes,
-#     borderpad=0.0,
-# )
-# ax.add_artist(anchored_box)
-#
-# box_text_reponses = TextArea(
-#     f"Communes : {epci.nbr_communes} ", textprops=dict(color=SUB_TITLE, size=16)
-# )
-#
-# box_text_commune = TextArea(
-#     f"Communes : ", textprops=dict(color=SUB_TITLE, size=16)
-# )
-#
 
 
 box_text_red = TextArea(
@@ -300,14 +242,4 @@ ax.add_artist(anchored_box)
 if not os.path.isdir(f"png/{epci.id}"):
     os.makedirs(f"png/{epci.id}")
 
-
-pl.savefig(f"png/{epci.id}/reponses_2025.png", dpi=300)
-
-#qualifs["diff"] = qualifs["qualifs_2025"] - qualifs["qualifs_2021"]
-#try:
-#    qualifs["relatif"] = qualifs["qualifs_2025"].divide(qualifs["qualifs_2021"])
-#except ZeroDivisionError:
-#    qualifs["relatif"] = np.nan
-#qualifs.to_csv('outputs/commune_qualif.csv')
-
-
+pl.savefig(f"png/{epci.id}/taux_2025.png", dpi=300)
