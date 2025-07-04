@@ -212,7 +212,7 @@ ax3.set_axis_off()
 ax4.set_axis_off()
 
 box_text_reponses = TextArea(
-    f"Communes : {epci.nbr_communes} ", textprops=dict(color=SUB_TITLE, size=16)
+    f"Communes : {len(epci.insee)} ", textprops=dict(color=SUB_TITLE, size=16)
 )
 box_text_red = TextArea(
     f"   au moins une réponse : {sup_zero_2021} ",
@@ -262,7 +262,7 @@ anchored_box = AnchoredOffsetbox(
 ax2.add_artist(anchored_box)
 
 box_text_reponses = TextArea(
-    f"Communes : {epci.nbr_communes} ", textprops=dict(color=SUB_TITLE, size=16)
+    f"Communes : {len(epci.insee)} ", textprops=dict(color=SUB_TITLE, size=16)
 )
 
 box_text_commune = TextArea(
