@@ -28,20 +28,27 @@ mpl.rcParams["text.color"] = "black"   # default lebel color
 pl.ion() # Enable interactive mode
 
 epci = EPCI.all[sys.argv[1]] #Find EPCI by id
+year = sys.argv[2] if len(sys.argv) > 2 else "2025"
+kind = sys.argv[3] if len(sys.argv) > 3 else "reponses"
     
 gdf_communes_shp = gpd.read_file("data/communes-20220101-shp")
+if(year == "2021"):
+    gdf = gpd.read_file("data/barometre2021.json")
+else:
+    gdf = gpd.read_file("data/barometre2025.json")
 
-gdf_2021 = gpd.read_file("data/barometre2021.json")
+gdf.rename(columns={"geometry": "coords"}, inplace=True)
 
-gdf_2021.rename(columns={"geometry": "coords"}, inplace=True)
-gdf_2021.rename(columns={"contributions": "contributions_2021"}, inplace=True)
+if(year == "2021"):
+    gdf_communes = gdf_communes_shp.join(
+        gdf.set_index("insee").loc[:, ("contributions", "coords", "per_cent")], on="insee", how="outer"
+    )
+else:    
+    gdf_communes = gdf_communes_shp.join(
+        gdf.set_index("insee").loc[:, ("contributions","population", "coords", "per_cent")], on="insee", how="outer"
+    )
 
-gdf_communes = gdf_communes_shp.join(
-    gdf_2021.set_index("insee").loc[:, ("contributions_2021", "coords")], on="insee", how="outer"
-)
-
-#gdf_communes["contributions_2021"] = gdf_communes["contributions_2021"].fillna(0)
-gdf_communes["contributions_2021"] = gdf_communes["contributions_2021"].fillna(0)
+gdf_communes["contributions"] = gdf_communes["contributions"].fillna(0)
 
 NO_RESPONSE = (1.0, 0.98, 0.98)
 AT_LEAST_ONE= (0.77, 0.18, 0.20)
@@ -51,22 +58,11 @@ TITLE = "#000000"
 SUB_TITLE = "mediumblue"
 EDGE_COLOR = (0.0, 0.0, 0.0)
 
-gdf_2021 = gdf_2021[gdf_2021["insee"].isin(epci.insee)]
+gdf = gdf[gdf["insee"].isin(epci.insee)]
 
-qualifs_2021 = []
-
-qualifs = pd.DataFrame(
-#    columns=["qualifs_2021", "qualifs_2025", "diff"],
-    columns=["qualifs_2021"],
-    dtype=float,
-#    index=dep_ids,
-)
 
 lon_min, lat_min, lon_max, lat_max = [-5, 40.7, 10, 51.5]
 ratio_dep = (lat_max - lat_min) / (lon_max - lon_min)
-
-
-dep_id = 59
 
 is_epci = gdf_communes["insee"].isin(epci.insee)
 
@@ -81,48 +77,57 @@ fig, ax = pl.subplots(
 fig.patch.set_facecolor(BACKGROUNG)
 
 with contextlib.suppress(ValueError):
-    gdf_dep[gdf_dep["contributions_2021"] == 0].plot(
+    gdf_dep[gdf_dep["contributions"] == 0].plot(
         color=(NO_RESPONSE),
         ax=ax,
         edgecolor=(EDGE_COLOR),
     )
+if(year == "2021"):
+    pas_qualifiees = gdf_dep[
+            (gdf_dep["contributions"] > 0) & (gdf_dep["contributions"] < 50)
+        ]   
+    qualifiees = gdf_dep[
+        (gdf_dep["contributions"] >= 50 )
+    ]
+else: 
+    pas_qualifiees = gdf_dep[
+            (( gdf_dep["contributions"] < 50) & (gdf_dep["population"] > 5000)) | ((gdf_dep["contributions"] < 30) & (gdf_dep["population"] <= 5000))
+        ]   
+    qualifiees = gdf_dep[
+        (( gdf_dep["contributions"] >= 50) & (gdf_dep["population"] > 5000)) | ((gdf_dep["contributions"] >= 30) & (gdf_dep["population"] <= 5000))
+    ]
+
 with contextlib.suppress(ValueError):
-    gdf_dep[
-        (gdf_dep["contributions_2021"] > 0) & (gdf_dep["contributions_2021"] < 50)
-    ].plot(
+    pas_qualifiees.plot(
         color=(AT_LEAST_ONE),
         ax=ax,
         edgecolor=(EDGE_COLOR),
         alpha=0.7
     )
+
 with contextlib.suppress(ValueError):
-    gdf_dep[(gdf_dep["contributions_2021"] >= 50)].plot(
+    qualifiees.plot(
         color=(QUALIFIED),
         ax=ax,
         edgecolor=(EDGE_COLOR),
         alpha=0.7
     )
 
+au_moins_une = pd.concat([pas_qualifiees, qualifiees])
 
-qualif_2021 = len(gdf_dep[(gdf_dep["contributions_2021"] >= 50)])
-
-sup_zero_2021 = len(gdf_dep[(gdf_dep["contributions_2021"] > 0)])
-
-qualifs_2021.append(qualif_2021)
-
-qualifs.loc[dep_id, 'qualifs_2021'] = qualif_2021
-
-
-qualifees_2021 = gdf_dep[(gdf_dep["contributions_2021"] >0)] 
-
-for idx, row in qualifees_2021.iterrows():
+for idx, row in au_moins_une.iterrows():
     if row['coords'] is not None:
-        texte = row['nom']+"\n"+ str(int(row['contributions_2021']))
-        ax.annotate(text=texte,xy=(row['coords'].x,row['coords'].y),horizontalalignment='center',
+       numvar = row['per_cent']
+       if kind == "taux":
+           numvar = row['per_cent']
+           texte = row['nom']+"\n"+  f'{numvar:.3f} %'
+       else:
+           texte = row['nom']+"\n" + str(int(row['contributions']))
+       ax.annotate(text=texte,xy=(row['coords'].x,row['coords'].y),horizontalalignment='center',
             verticalalignment='center', fontsize=6, color="mediumblue")
 
 ax.set_title(
-    f"Participation Baromètre Vélo : {epci.name}\n\n  2021",
+    f"Participation Baromètre Vélo : {epci.name}\n\n  {year}",
     loc="center",
     fontdict={"fontsize": "22", "color": TITLE},
 )
@@ -130,12 +135,11 @@ ax.set_title(
 ax.set_axis_off()
 
 box_text_reponses = TextArea(
-    f"Communes : {epci.nbr_communes} ", textprops=dict(color=SUB_TITLE, size=16)
+    f"Communes : {len(epci.insee)} ", textprops=dict(color=SUB_TITLE, size=16)
 )
 
-
 box_text_red = TextArea(
-    f"   au moins une réponse : {sup_zero_2021} ",
+    f"   au moins une réponse : {len(au_moins_une)} ",
     textprops=dict(color=SUB_TITLE, size=16),
 )
 box_draw_red = DrawingArea(20, 20, 0, 0)
@@ -150,7 +154,7 @@ box_red = HPacker(
 )
 
 box_text_green = TextArea(
-    f"   qualifiées : {qualif_2021} ", textprops=dict(color=SUB_TITLE, size=16)
+    f"   qualifiées : {len(qualifiees)} ", textprops=dict(color=SUB_TITLE, size=16)
 )
 box_draw_green = DrawingArea(20, 20, 0, 0)
 rect = Rectangle((2, 2), width=16, height=16, angle=0, fc=(QUALIFIED))
@@ -184,13 +188,7 @@ ax.add_artist(anchored_box)
 if not os.path.isdir(f"png/{epci.id}"):
     os.makedirs(f"png/{epci.id}")
 
-pl.savefig(f"png/{epci.id}/reponses_2021.png", dpi=300)
+pl.savefig(f"png/{epci.id}/{kind}_{year}.png", dpi=300)
 
-#qualifs["diff"] = qualifs["qualifs_2025"] - qualifs["qualifs_2021"]
-#try:
-#    qualifs["relatif"] = qualifs["qualifs_2025"].divide(qualifs["qualifs_2021"])
-#except ZeroDivisionError:
-#    qualifs["relatif"] = np.nan
-#qualifs.to_csv('outputs/commune_qualif.csv')
 
 
