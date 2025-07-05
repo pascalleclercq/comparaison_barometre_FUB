@@ -33,12 +33,15 @@ epci = EPCI.all[sys.argv[1]] #Find EPCI by id
     
 gdf_communes_shp = gpd.read_file("data/communes-20220101-shp")
 gdf_2025 = gpd.read_file("data/barometre2025.json")
-gdf_2025 = gdf_2025.drop("geometry", axis=1)
+#gdf_2025 = gdf_2025.drop("geometry", axis=1)
+gdf_2025.rename(columns={"geometry": "coords"}, inplace=True)
 
 gdf_2025.rename(columns={"contributions": "contributions_2025"}, inplace=True)
 
 gdf_2021 = gpd.read_file("data/barometre2021.json")
-gdf_2021 = gdf_2021.drop("geometry", axis=1)
+#gdf_2021 = gdf_2021.drop("geometry", axis=1)
+gdf_2021.rename(columns={"geometry": "coords"}, inplace=True)
+
 
 gdf_2021.rename(columns={"contributions": "contributions_2021"}, inplace=True)
 
@@ -128,12 +131,14 @@ with contextlib.suppress(ValueError):
         color=(AT_LEAST_ONE),
         ax=ax2,
         edgecolor=(EDGE_COLOR),
+        alpha=0.75
     )
 with contextlib.suppress(ValueError):
     gdf_dep[(gdf_dep["contributions_2021"] >= 50)].plot(
         color=(QUALIFIED),
         ax=ax2,
         edgecolor=(EDGE_COLOR),
+        alpha=0.75
     )
 
 with contextlib.suppress(ValueError):
@@ -149,13 +154,27 @@ with contextlib.suppress(ValueError):
         color=(AT_LEAST_ONE),
         ax=ax3,
         edgecolor=(EDGE_COLOR),
+        alpha=0.75
     )
 with contextlib.suppress(ValueError):
     gdf_dep[(( gdf_dep["contributions_2025"] >= 50) & (gdf_dep["population"] > 5000)) | ((gdf_dep["contributions_2025"] >= 30) & (gdf_dep["population"] <= 5000))].plot(
         color=(QUALIFIED),
         ax=ax3,
         edgecolor=(EDGE_COLOR),
+        alpha=0.75
     )
+    
+au_moins_une_2021= gdf_dep[gdf_dep["contributions_2021"] > 0].copy()
+for idx, row in au_moins_une_2021.iterrows():
+    if((row['insee'] in epci.important) & (row['coords'] is not None)):
+        ax2.annotate(text=row['nom'],xy=(row['coords'].x,row['coords'].y),horizontalalignment='center',
+            verticalalignment='center', fontsize=5, color="mediumblue") 
+
+au_moins_une_2025= gdf_dep[gdf_dep["contributions_2025"] > 0].copy()
+for idx, row in au_moins_une_2025.iterrows():
+    if((row['insee'] in epci.important) & (row['coords'] is not None)):
+       ax3.annotate(text=row['nom'],xy=(row['coords'].x,row['coords'].y),horizontalalignment='center',
+            verticalalignment='center', fontsize=5, color="mediumblue")
 
 qualif_2021 = len(gdf_dep[(gdf_dep["contributions_2021"] >= 50)])
 qualif_2025 = len(gdf_dep[(( gdf_dep["contributions_2025"] >= 50) & (gdf_dep["population"] > 5000)) | ((gdf_dep["contributions_2025"] >= 30) & (gdf_dep["population"] <= 5000))])
