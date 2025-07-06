@@ -33,28 +33,26 @@ epci = EPCI.all[sys.argv[1]] #Find EPCI by id
     
 gdf_communes_shp = gpd.read_file("data/communes-20220101-shp")
 gdf_2025 = gpd.read_file("data/barometre2025.json")
-#gdf_2025 = gdf_2025.drop("geometry", axis=1)
-gdf_2025.rename(columns={"geometry": "coords"}, inplace=True)
 
-gdf_2025.rename(columns={"contributions": "contributions_2025"}, inplace=True)
+gdf_2025.rename(columns={"geometry": "coords"}, inplace=True)
+#gdf_2025.rename(columns={"contributions": "contributions_2025"}, inplace=True)
 
 gdf_2021 = gpd.read_file("data/barometre2021.json")
-#gdf_2021 = gdf_2021.drop("geometry", axis=1)
+
 gdf_2021.rename(columns={"geometry": "coords"}, inplace=True)
-
-
-gdf_2021.rename(columns={"contributions": "contributions_2021"}, inplace=True)
+#gdf_2021.rename(columns={"contributions": "contributions_2021"}, inplace=True)
 
 gdf_communes = gdf_communes_shp.join(
     gdf_2021.set_index("insee"), on="insee", how="outer"
 )
 gdf_communes = gdf_communes.join(
-    gdf_2025.set_index("insee").loc[:, ("contributions_2025","population")], on="insee", how="outer"
+    gdf_2025.set_index("insee").loc[:, ("coords","contributions","population")], on="insee", how="outer", lsuffix="_2021"
 )
 
+#print(gdf_communes.columns)
 
 gdf_communes["contributions_2021"] = gdf_communes["contributions_2021"].fillna(0)
-gdf_communes["contributions_2025"] = gdf_communes["contributions_2025"].fillna(0)
+gdf_communes["contributions_2025"] = gdf_communes["contributions"].fillna(0)
 
 
 NO_RESPONSE = (1.0, 0.98, 0.98)
@@ -99,15 +97,21 @@ ratio_dep = (lat_max - lat_min) / (lon_max - lon_min)
 # )
 
 #fig = pl.figure(figsize=(10, ))
-print(ratio_dep)
+#print(ratio_dep)
 
 #fig = pl.figure(figsize=(10, 10 * ratio_dep + 4))
-fig = pl.figure(figsize=(11, 11 * ratio_dep ))
-fig.set_layout_engine(layout='tight')
-ax1 = pl.subplot2grid((25, 40), (18, 16), rowspan=6, colspan=4)
-ax2 = pl.subplot2grid((25, 40), (1, 0),  rowspan=24, colspan=16)
-ax3 = pl.subplot2grid((25, 40), (1, 24), rowspan=24, colspan=16)
-ax4 = pl.subplot2grid((25, 40), (0, 0),  colspan=40)
+fig = pl.figure(figsize=(15, 6 ), dpi=300, edgecolor =QUALIFIED, frameon=True)
+#fig.set_layout_engine(layout='tight')
+ax1 = pl.subplot2grid((35, 60), (18, 26), rowspan=6, colspan=4)  #logo
+ax2 = pl.subplot2grid((35, 60), (1, 0),  rowspan=34, colspan=26) #2021
+ax3 = pl.subplot2grid((35, 60), (1, 34), rowspan=34, colspan=26) #2024
+ax4 = pl.subplot2grid((35, 60), (0, 0),   colspan=60)             #barre de titre
+
+ax1.set_axis_off()
+ax2.set_axis_off()
+ax3.set_axis_off()
+ax4.set_axis_off()
+
 
 #chargement du logo
 im = pl.imread('data/308482403_384298630581290_89844181439031233_n.jpg')
@@ -166,13 +170,13 @@ with contextlib.suppress(ValueError):
     
 au_moins_une_2021= gdf_dep[gdf_dep["contributions_2021"] > 0].copy()
 for idx, row in au_moins_une_2021.iterrows():
-    if((row['insee'] in epci.important) & (row['coords'] is not None)):
-        ax2.annotate(text=row['nom'],xy=(row['coords'].x,row['coords'].y),horizontalalignment='center',
+    if((row['insee'] in epci.important)):
+        ax2.annotate(text=row['nom'],xy=(row['coords_2021'].x,row['coords_2021'].y),horizontalalignment='center',
             verticalalignment='center', fontsize=5, color="mediumblue") 
 
 au_moins_une_2025= gdf_dep[gdf_dep["contributions_2025"] > 0].copy()
 for idx, row in au_moins_une_2025.iterrows():
-    if((row['insee'] in epci.important) & (row['coords'] is not None)):
+    if((row['insee'] in epci.important)):
        ax3.annotate(text=row['nom'],xy=(row['coords'].x,row['coords'].y),horizontalalignment='center',
             verticalalignment='center', fontsize=5, color="mediumblue")
 
@@ -188,56 +192,29 @@ qualifs.loc[dep_id, 'qualifs_2021'] = qualif_2021
 qualifs.loc[dep_id, 'qualifs_2025'] = qualif_2025
 qualifs.loc[dep_id, 'diff'] = qualif_2025 - qualif_2021
 
-
-
-#ax2.add_image(img)
-# A sample image
-#with cbook.get_sample_data('C:/Users/pasca/git/comparaison_barometre_FUB/data/logo_adav.png') as image_file:
-#    image = pl.imread(image_file)
-
-#img = mpimg.imread('data/logo_adav.png')
-
-#image = Image.open('data/logo_adav.jpg')
-
-#ax2.imshow(image, vmin=0, vmax=255)
 ax4.set_title(
         f"Participation au Barometre Vélo:\n{epci.name}"
         ,
         loc="center",
-        fontdict={"fontsize": "22", "color": TITLE},
+        fontdict={"fontsize": "20", "color": TITLE},
 )
-ax2.set_title(
-        f"2021"
-#    .format(
-#        df_dep[df_dep["N° du dép."] == dep_id][
-#            "Nom du département"
-#        ].values[0]
-#        # "Ile de France"
-#    )
-    ,
-    loc="center",
-    fontdict={"fontsize": "22", "color": TITLE},
-)
-ax3.set_title("2025", loc="center", fontdict={"fontsize": "22", "color": TITLE})
+ax2.set_title("2021", loc="center", fontdict={"fontsize": "20", "color": TITLE})
+ax3.set_title("2025", loc="center", fontdict={"fontsize": "20", "color": TITLE})
 #ax1.set_axis_off()
 
 #imagebox = OffsetImage(im, zoom = 0.10)
 
 #ab = AnnotationBbox(imagebox, (1, 0), xycoords='axes fraction', box_alignment=(1.1, 1), frameon = False)
 
-ax1.set_axis_off()
-ax2.set_axis_off()
-ax3.set_axis_off()
-ax4.set_axis_off()
 
 box_text_reponses = TextArea(
-    f"Communes : {len(epci.insee)} ", textprops=dict(color=SUB_TITLE, size=16)
+    f"Communes : {len(epci.insee)} ", textprops=dict(color=SUB_TITLE, size=12)
 )
 box_text_red = TextArea(
     f"   au moins une réponse : {sup_zero_2021} ",
-    textprops=dict(color=SUB_TITLE, size=16),
+    textprops=dict(color=SUB_TITLE, size=12),
 )
-box_draw_red = DrawingArea(20, 20, 0, 0)
+box_draw_red = DrawingArea(16, 16, 0, 0)
 rect = Rectangle((2, 2), width=16, height=16, angle=0, fc=(AT_LEAST_ONE))
 box_draw_red.add_artist(rect)
 box_red = HPacker(
@@ -249,9 +226,9 @@ box_red = HPacker(
 )
 
 box_text_green = TextArea(
-    f"   qualifiées : {qualif_2021} ", textprops=dict(color=SUB_TITLE, size=16)
+    f"   qualifiées : {qualif_2021} ", textprops=dict(color=SUB_TITLE, size=12)
 )
-box_draw_green = DrawingArea(20, 20, 0, 0)
+box_draw_green = DrawingArea(16, 16, 0, 0)
 rect = Rectangle((2, 2), width=16, height=16, angle=0, fc=(QUALIFIED))
 box_draw_green.add_artist(rect)
 box_green = HPacker(
@@ -281,18 +258,18 @@ anchored_box = AnchoredOffsetbox(
 ax2.add_artist(anchored_box)
 
 box_text_reponses = TextArea(
-    f"Communes : {len(epci.insee)} ", textprops=dict(color=SUB_TITLE, size=16)
+    f"Communes : {len(epci.insee)} ", textprops=dict(color=SUB_TITLE, size=12)
 )
 
 box_text_commune = TextArea(
-    f"Communes : ", textprops=dict(color=SUB_TITLE, size=16)
+    f"Communes : ", textprops=dict(color=SUB_TITLE, size=12)
 )
 
 box_text_red = TextArea(
     f"   au moins une réponse : {sup_zero_2025} ",
-    textprops=dict(color=SUB_TITLE, size=16),
+    textprops=dict(color=SUB_TITLE, size=12),
 )
-box_draw_red = DrawingArea(20, 20, 0, 0)
+box_draw_red = DrawingArea(16, 16, 0, 0)
 rect = Rectangle((2, 2), width=16, height=16, angle=0, fc=(AT_LEAST_ONE))
 box_draw_red.add_artist(rect)
 box_red = HPacker(
@@ -304,9 +281,9 @@ box_red = HPacker(
 )
 
 box_text_green = TextArea(
-    f"   qualifiées : {qualif_2025} ", textprops=dict(color=SUB_TITLE, size=16)
+    f"   qualifiées : {qualif_2025} ", textprops=dict(color=SUB_TITLE, size=12)
 )
-box_draw_green = DrawingArea(20, 20, 0, 0)
+box_draw_green = DrawingArea(16, 16, 0, 0)
 rect = Rectangle((2, 2), width=16, height=16, angle=0, fc=(QUALIFIED))
 box_draw_green.add_artist(rect)
 box_green = HPacker(
@@ -334,7 +311,8 @@ anchored_box = AnchoredOffsetbox(
     borderpad=0.0,
 )
 ax3.add_artist(anchored_box)
-pl.savefig(f"png/{epci.id}.png", dpi=300)
+print(epci.id)
+pl.savefig(f"png/{epci.id}.png", dpi=300, pad_inches=0.1, bbox_inches='tight')
 
 #qualifs["diff"] = qualifs["qualifs_2025"] - qualifs["qualifs_2021"]
 #try:
