@@ -168,15 +168,18 @@ with contextlib.suppress(ValueError):
         alpha=0.75
     )
     
+#print(gdf_dep.columns)    
+#print(gdf_dep)
+
 au_moins_une_2021= gdf_dep[gdf_dep["contributions_2021"] > 0].copy()
 for idx, row in au_moins_une_2021.iterrows():
-    if((row['insee'] in epci.important)):
+    if(((row['surf_ha'] > epci.surface_mini_for_label))):
         ax2.annotate(text=row['nom'],xy=(row['coords_2021'].x,row['coords_2021'].y),horizontalalignment='center',
             verticalalignment='center', fontsize=5, color="mediumblue") 
 
 au_moins_une_2025= gdf_dep[gdf_dep["contributions_2025"] > 0].copy()
 for idx, row in au_moins_une_2025.iterrows():
-    if((row['insee'] in epci.important)):
+    if((row['surf_ha'] > epci.surface_mini_for_label)):
        ax3.annotate(text=row['nom'],xy=(row['coords'].x,row['coords'].y),horizontalalignment='center',
             verticalalignment='center', fontsize=5, color="mediumblue")
 
