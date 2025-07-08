@@ -1,7 +1,7 @@
 import contextlib
 from io import StringIO
 from PIL import Image
-
+import textwrap 
 import sys
 import EPCI
 import geopandas as gpd
@@ -174,13 +174,15 @@ with contextlib.suppress(ValueError):
 au_moins_une_2021= gdf_dep[gdf_dep["contributions_2021"] > 0].copy()
 for idx, row in au_moins_une_2021.iterrows():
     if(((row['surf_ha'] > epci.surface_mini_for_label))):
-        ax2.annotate(text=row['nom'],xy=(row['coords_2021'].x,row['coords_2021'].y),horizontalalignment='center',
+        text = textwrap.shorten(text=row['nom'], width=18, placeholder="...")
+        ax2.annotate(text, xy=(row['coords_2021'].x,row['coords_2021'].y),horizontalalignment='center',
             verticalalignment='center', fontsize=5, color="mediumblue") 
 
 au_moins_une_2025= gdf_dep[gdf_dep["contributions_2025"] > 0].copy()
 for idx, row in au_moins_une_2025.iterrows():
     if((row['surf_ha'] > epci.surface_mini_for_label)):
-       ax3.annotate(text=row['nom'],xy=(row['coords'].x,row['coords'].y),horizontalalignment='center',
+        text = textwrap.shorten(text=row['nom'], width=18,  placeholder="...")
+        ax3.annotate(text,xy=(row['coords'].x,row['coords'].y),horizontalalignment='center',
             verticalalignment='center', fontsize=5, color="mediumblue")
 
 qualif_2021 = len(gdf_dep[(gdf_dep["contributions_2021"] >= 50)])
