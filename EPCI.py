@@ -143,15 +143,15 @@ CCRA = EPCI ('CCRA', 'CC de la Région d\'Audruicq',['62645','62057','62748','62
 CCOM = EPCI('CCOM', 'CC Osartis Marquion',
             ['62173','62865','62128','62240','62284','62383','62638','62164','62476','62559','62825','62039','62627','62650','62680','62728','62734','62384','62864','62673','62612','62355','62469','62646','62298','62405','62660','62317','62781','62081','62145','62782','62192','62639','62703','62780','62739','62280','62671','62484','62424','62184','62697','62319','62858','62709','62358','62106','62414'], None)
 
-CCSA = EPCI('CCSA', 'CC du Sud Artois',
+CCSAr = EPCI('CCSAr', 'CC du Sud Artois',
             ['62080','62259','62181','62440','62839','62005','62117','62672','62572','62096','62515','62422','62754','62285','62248','62909','62829','62341','62306','62800','62421','62122','62387','62131','62068','62082','62006','62272','62594','62733','62223','62597','62731','62715','62406','62343','62326','62855','62353','62002','62493','62185','62093','62591','62776','62561','62830','62410','62121','62608','62064','62777','62374','62619','62840','62189','62876','62103','62129','62375','62593','62079','62494','62708'], None)
 
-NPDC = EPCI('NPDC', 'Nord Pas-de-Calais',
+NPDC = EPCI('NPDC', 'Nord et Pas-de-Calais',
             MEL.insee + CCPC.insee + CALL.insee+CABBALR.insee+CAPH.insee+CAVM.insee+CCFL.insee+
             CCFI.insee+CAHC.insee+CADBM.insee+CADA.insee+CAC.insee+CAB.insee+CAGCTM.insee+CCCO.insee+
             CAPSO.insee+CUD.insee+CCPM.insee+CCSA.insee + CACC.insee + CAMVS.insee+CCCA.insee+ CCCAv.insee+
             CCDS.insee+CC7V.insee+CUA.insee+CCT.insee+CCPS.insee+CCPL.insee+CCHF.insee + CCPO.insee + CCHPM.insee+
-            CCTDC.insee+CCRA.insee+CCOM.insee+CCSA.insee, 10000)
+            CCTDC.insee+CCRA.insee+CCOM.insee+CCSA.insee+CCSAr.insee, 10000)
 
 all = {
     "MEL": MEL,
@@ -197,5 +197,6 @@ all = {
     'CCRA': CCRA,
     'CCOM': CCOM,
     'CCSA': CCSA,
+    'CCSAr': CCSAr,
     'NPDC': NPDC
 }
