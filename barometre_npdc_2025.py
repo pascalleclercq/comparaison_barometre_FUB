@@ -69,6 +69,9 @@ gdf_communes["contributions_2025"] = gdf_communes["contributions_2025"].fillna(0
 dep_ids = list()
 dep_ids.append("59")
 dep_ids.append("62")
+dep_ids.append("60")
+dep_ids.append("80")
+dep_ids.append("02")
 
 qualifs_2021= []
 qualifs_2025 = []
@@ -157,12 +160,20 @@ dep_id = 59
 #    print("dep_id", dep_id)
 is_dep_59 = gdf_communes["insee"].str.startswith(str("59"))
 is_dep_62 = gdf_communes["insee"].str.startswith(str("62"))
+is_dep_80 = gdf_communes["insee"].str.startswith(str("80"))
+is_dep_60 = gdf_communes["insee"].str.startswith(str("02"))
+is_dep_02 = gdf_communes["insee"].str.startswith(str("60"))
+
+
     #is_dep = gdf_communes["insee"].str.startswith("59")
     #print("is_dep", type(is_dep))
 gdf_dep_59 = gdf_communes[is_dep_59]
 gdf_dep_62 = gdf_communes[is_dep_62]
+gdf_dep_80 = gdf_communes[is_dep_80]
+gdf_dep_60 = gdf_communes[is_dep_60]
+gdf_dep_02 = gdf_communes[is_dep_02]
 #print("gdf_dep", type(gdf_dep_59)) 
-gdf_dep = pd.concat([gdf_dep_59, gdf_dep_62])
+gdf_dep = pd.concat([gdf_dep_59, gdf_dep_62, gdf_dep_80, gdf_dep_60, gdf_dep_02])
 
 print("gdf_dep", gdf_dep)
     

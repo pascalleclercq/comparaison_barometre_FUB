@@ -153,6 +153,9 @@ NPDC = EPCI('NPDC', 'Nord et Pas-de-Calais',
             CCDS.insee+CC7V.insee+CUA.insee+CCT.insee+CCPS.insee+CCPL.insee+CCHF.insee + CCPO.insee + CCHPM.insee+
             CCTDC.insee+CCRA.insee+CCOM.insee+CCSA.insee+CCSAr.insee, 10000)
 
+LITTORAL = EPCI('LITTORAL', 'LITTORAL',
+                CUD.insee+CADBM.insee+CAB.insee+CCTDC.insee+CAGCTM.insee+CCRA.insee, 2000)
+
 all = {
     "MEL": MEL,
     "WEPPES": WEPPES,
@@ -198,5 +201,6 @@ all = {
     'CCOM': CCOM,
     'CCSA': CCSA,
     'CCSAr': CCSAr,
-    'NPDC': NPDC
+    'NPDC': NPDC,
+    'LITTORAL': LITTORAL
 }

@@ -127,6 +127,7 @@ with contextlib.suppress(ValueError):
         color=(NO_RESPONSE),
         ax=ax2,
         edgecolor=(EDGE_COLOR),
+        linewidth=0.1
     )
 with contextlib.suppress(ValueError):
     gdf_dep[
@@ -135,14 +136,16 @@ with contextlib.suppress(ValueError):
         color=(AT_LEAST_ONE),
         ax=ax2,
         edgecolor=(EDGE_COLOR),
-        alpha=0.75
+        alpha=0.75,
+        linewidth=0.1
     )
 with contextlib.suppress(ValueError):
     gdf_dep[(gdf_dep["contributions_2021"] >= 50)].plot(
         color=(QUALIFIED),
         ax=ax2,
         edgecolor=(EDGE_COLOR),
-        alpha=0.75
+        alpha=0.75,
+        linewidth=0.1
     )
 
 with contextlib.suppress(ValueError):
@@ -150,6 +153,7 @@ with contextlib.suppress(ValueError):
         color=(NO_RESPONSE),
         ax=ax3,
         edgecolor=(EDGE_COLOR),
+        linewidth=0.1
     )
 with contextlib.suppress(ValueError):
     gdf_dep[
@@ -158,14 +162,16 @@ with contextlib.suppress(ValueError):
         color=(AT_LEAST_ONE),
         ax=ax3,
         edgecolor=(EDGE_COLOR),
-        alpha=0.75
+        alpha=0.75,
+        linewidth=0.1
     )
 with contextlib.suppress(ValueError):
     gdf_dep[(( gdf_dep["contributions_2025"] >= 50) & (gdf_dep["population"] > 5000)) | ((gdf_dep["contributions_2025"] >= 30) & (gdf_dep["population"] <= 5000))].plot(
         color=(QUALIFIED),
         ax=ax3,
         edgecolor=(EDGE_COLOR),
-        alpha=0.75
+        alpha=0.75,
+        linewidth=0.1
     )
     
 #print(gdf_dep.columns)    
