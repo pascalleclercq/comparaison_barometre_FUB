@@ -1,29 +1,12 @@
 import contextlib
-from io import StringIO
-from PIL import Image
 import textwrap
-import os
 import sys
 import EPCI
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.pyplot as pl
-import numpy as np
 #import matplotlib.image as mpimg
-from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
-import pandas as pd
-import numpy as np
-import matplotlib.cbook as cbook
-from matplotlib.offsetbox import (
-    AnchoredOffsetbox,
-    DrawingArea,
-    HPacker,
-    TextArea,
-    VPacker,
-)
-from matplotlib.patches import Rectangle
-from tqdm import tqdm
 
 
 
@@ -46,14 +29,14 @@ gdf_communes["classe"] = gdf_communes["classe"].fillna("Non participation")
 
 
 NO_RESPONSE = (1.0, 0.98, 0.98)
-AT_LEAST_ONE= "#e9e9e9"
+AT_LEAST_ONE= (0, 0, 0, 0)
 QUALIFIED = (0.61, 0.87, 0.19)
-color_classe_Ap = "#00822C"
+color_classe_Ap = "#2b7910"
 color_classe_A = "#4b9833"
-color_classe_B = "#79b52e"
-color_classe_C = "#c8d228"
-color_classe_D = "#ffee31"
-color_classe_E = "#fccb2d"
+color_classe_B = "#79b52d"
+color_classe_C = "#c8d227"
+color_classe_D = "#feef30"
+color_classe_E = "#fccb2c"
 color_classe_F = "#f39939"
 color_classe_G = "#e44b23"
 BACKGROUNG = (1.0, 0.98, 0.98)
@@ -64,34 +47,61 @@ legend_loc='upper right'
 
 cmap = pl.cm.colors.ListedColormap([color_classe_A, color_classe_B, color_classe_C, color_classe_D, color_classe_E, color_classe_F, color_classe_G, AT_LEAST_ONE, NO_RESPONSE])
 fig, ax = pl.subplots(1, 1, constrained_layout=True, figsize=(11.7, 8.3))
+pos = (1, 0.95)
+alignment = (1, 0.9)
+zoom_legend=0.17
 
 if(epci.id=="MEL"):
     cmap = pl.cm.colors.ListedColormap([color_classe_D, color_classe_E,  color_classe_F, color_classe_G, AT_LEAST_ONE])
     fig, ax = pl.subplots(1, 1, constrained_layout=True, figsize=(11.7, 11.7))
+    pos = (0.2, 0.9)
+    alignment = (0.6, 0.6)
 if(epci.id=="CABBALR"):
     cmap = pl.cm.colors.ListedColormap([color_classe_E, AT_LEAST_ONE, NO_RESPONSE])
+    pos = (0.9, 0.2)
+    alignment = (0.6, 0.6)
 if(epci.id=="CCPC"):
     cmap = pl.cm.colors.ListedColormap([color_classe_C, color_classe_E, color_classe_F, AT_LEAST_ONE, NO_RESPONSE])
+    pos = (1, 0.95)
+    alignment = (0.95, 0.95)
+    zoom_legend=0.14
 if(epci.id=="CCFL"):
     cmap = pl.cm.colors.ListedColormap([ color_classe_G, AT_LEAST_ONE])
     fig, ax = pl.subplots(1, 1, constrained_layout=True, figsize=(18.7, 8.3))
+    zoom_legend=0.17
+    pos = (0.25, 0.35)
 if(epci.id=="LITTORAL"):
     legend_loc='lower right'
     cmap = pl.cm.colors.ListedColormap([color_classe_B, color_classe_C, color_classe_D, color_classe_E, color_classe_G, AT_LEAST_ONE, NO_RESPONSE])
     fig, ax = pl.subplots(1, 1, constrained_layout=True, figsize=(11.7, 13.7))
+    pos = (0.9, 0.2)
+    alignment = (0.6, 0.6)
+    zoom_legend=0.25
 if(epci.id=="CALL"):
     cmap = pl.cm.colors.ListedColormap([AT_LEAST_ONE, NO_RESPONSE])
     fig, ax = pl.subplots(1, 1, constrained_layout=True, figsize=(18.7, 11.7))
+    pos = (0.2, 0.9)
+    alignment = (1, 1)
+    zoom_legend=0.2
 if(epci.id=="CCFI"):
     cmap = pl.cm.colors.ListedColormap([color_classe_E, color_classe_F, AT_LEAST_ONE, NO_RESPONSE])
     fig, ax = pl.subplots(1, 1, constrained_layout=True, figsize=(18.7, 11.7))
+    fig, ax = pl.subplots(1, 1, constrained_layout=True, figsize=(17.7, 11.7))
+    pos = (1, 0.95)
+    alignment = (0.95, 0.95)
+    zoom_legend=0.2    
 if(epci.id=="CAPH"):
     cmap = pl.cm.colors.ListedColormap([color_classe_F, AT_LEAST_ONE, NO_RESPONSE])
-    fig, ax = pl.subplots(1, 1, constrained_layout=True, figsize=(11.7, 13.7))
+    fig, ax = pl.subplots(1, 1, constrained_layout=True, figsize=(9, 10))
+    pos = (0.2, 0.9)
+    alignment = (1, 1)
+    zoom_legend=0.17
 if(epci.id=="CAVM"):
     cmap = pl.cm.colors.ListedColormap([color_classe_G, AT_LEAST_ONE, NO_RESPONSE])
     fig, ax = pl.subplots(1, 1, constrained_layout=True, figsize=(11.7, 13.7))
-
+    pos = (0.2, 0.9)
+    alignment = (1, 1)
+    zoom_legend=0.2
 
 gdf = gdf[gdf["insee"].isin(epci.insee)]
 
@@ -113,17 +123,32 @@ with contextlib.suppress(ValueError):
     )
 
 
-legend_elements = [Line2D([0], [0], marker='o', color='w', label='A', markerfacecolor=color_classe_A, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
-                   Line2D([0], [0], marker='o', color='w', label='B', markerfacecolor=color_classe_B, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
-                   Line2D([0], [0], marker='o', color='w', label='C', markerfacecolor=color_classe_C, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
-                   Line2D([0], [0], marker='o', color='w', label='D', markerfacecolor=color_classe_D, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
-                   Line2D([0], [0], marker='o', color='w', label='E', markerfacecolor=color_classe_E, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
-                   Line2D([0], [0], marker='o', color='w', label='F', markerfacecolor=color_classe_F, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
-                   Line2D([0], [0], marker='o', color='w', label='G', markerfacecolor=color_classe_G, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
-                   Line2D([0], [0], marker='o', color='w', label='Non classée', markerfacecolor=AT_LEAST_ONE, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
-                   Line2D([0], [0], marker='o', color='w', label='Non participation', markerfacecolor=NO_RESPONSE, markersize=10, markeredgecolor='black',markeredgewidth=0.2)]
+# legend_elements = [Line2D([0], [0], marker='o', color='w', label='A', markerfacecolor=color_classe_A, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
+#                    Line2D([0], [0], marker='o', color='w', label='B', markerfacecolor=color_classe_B, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
+#                    Line2D([0], [0], marker='o', color='w', label='C', markerfacecolor=color_classe_C, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
+#                    Line2D([0], [0], marker='o', color='w', label='D', markerfacecolor=color_classe_D, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
+#                    Line2D([0], [0], marker='o', color='w', label='E', markerfacecolor=color_classe_E, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
+#                    Line2D([0], [0], marker='o', color='w', label='F', markerfacecolor=color_classe_F, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
+#                    Line2D([0], [0], marker='o', color='w', label='G', markerfacecolor=color_classe_G, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
+#                    Line2D([0], [0], marker='o', color='w', label='Non classée', markerfacecolor=AT_LEAST_ONE, markersize=10, markeredgecolor='black',markeredgewidth=0.2),
+#                    Line2D([0], [0], marker='o', color='w', label='Non participation', markerfacecolor=NO_RESPONSE, markersize=10, markeredgecolor='black',markeredgewidth=0.2)]
+#
+# ax.legend(handles=legend_elements, loc=legend_loc, title="Classe")
 
-ax.legend(handles=legend_elements, loc=legend_loc, title="Classe")
+
+legend_elements = [
+    Patch(facecolor=color_classe_Ap, edgecolor='black', linewidth=0.5, label='A+  ≥ 4.6'),
+    Patch(facecolor=color_classe_A,  edgecolor='black', linewidth=0.5, label='A    ≥ 4.3 et < 4.6'),
+    Patch(facecolor=color_classe_B,  edgecolor='black', linewidth=0.5, label='B    ≥ 3.9 et < 4.3'),
+    Patch(facecolor=color_classe_C,  edgecolor='black', linewidth=0.5, label='C    ≥ 3.5 et < 3.9'),
+    Patch(facecolor=color_classe_D,  edgecolor='black', linewidth=0.5, label='D    ≥ 3.1 et < 3.5'),
+    Patch(facecolor=color_classe_E,  edgecolor='black', linewidth=0.5, label='E    ≥ 2.7 et < 3.1'),
+    Patch(facecolor=color_classe_F,  edgecolor='black', linewidth=0.5, label='F    ≥ 2.3 et < 2.7'),
+    Patch(facecolor=color_classe_G,  edgecolor='black', linewidth=0.5, label='G    < 2.3'),
+    Patch(facecolor=NO_RESPONSE,     edgecolor='black', linewidth=0.5, label='Non participation'),
+]
+ax.legend(handles=legend_elements, loc=legend_loc, title="Classe", fontsize=8, title_fontsize=9)
+
 
 au_moins_une = gdf_dep
 for idx, row in au_moins_une.iterrows():
